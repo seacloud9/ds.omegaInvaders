@@ -1,0 +1,164 @@
+<!doctype html>
+<head>
+    <title>Fractal Invaders</title>
+    <!--
+   ___                             _____                     _               
+  /___\_ __ ___   ___  __ _  __ _  \_   \_ ____   ____ _  __| | ___ _ __ ___ 
+ //  // '_ ` _ \ / _ \/ _` |/ _` |  / /\/ '_ \ \ / / _` |/ _` |/ _ \ '__/ __|
+/ \_//| | | | | |  __/ (_| | (_| /\/ /_ | | | \ V / (_| | (_| |  __/ |  \__ \
+\___/ |_| |_| |_|\___|\__, |\__,_\____/ |_| |_|\_/ \__,_|\__,_|\___|_|  |___/
+                      |___/                                                  
+    
+    -->
+    <style>
+    body{margin:0px; padding:0px;background-color: #000}
+    #container{background-color: #000}
+    #cockpit{width:100%; z-index: 999999; position: absolute; bottom: 0; left: 0; opacity: 0.4}
+    #loader{float:left;height: 30px;width: 100%;}
+    #loadingFill{float: left; height:10px; background: #ff0084; /* Old browsers */
+    background: -moz-linear-gradient(top,  #ff0084 0%, #ff0084 100%); /* FF3.6+ */
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ff0084), color-stop(100%,#ff0084)); /* Chrome,Safari4+ */
+    background: -webkit-linear-gradient(top,  #ff0084 0%,#ff0084 100%); /* Chrome10+,Safari5.1+ */
+    background: -o-linear-gradient(top,  #ff0084 0%,#ff0084 100%); /* Opera 11.10+ */
+    background: -ms-linear-gradient(top,  #ff0084 0%,#ff0084 100%); /* IE10+ */
+    background: linear-gradient(to bottom,  #ff0084 0%,#ff0084 100%); /* W3C */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ff0084', endColorstr='#ff0084',GradientType=0 ); /* IE6-9 */
+    }
+    .unselectable {
+    /* For Opera and <= IE9, we need to add unselectable="on" attribute onto each element */
+    /* Check this site for more details: http://help.dottoro.com/lhwdpnva.php */
+    -moz-user-select: none; /* These user-select properties are inheritable, used to prevent text selection */
+    -webkit-user-select: none;
+    -ms-user-select: none; /* From IE10 only */
+    user-select: none; /* Not valid CSS yet, as of July 2012 */
+    -webkit-user-drag: none; /* Prevents dragging of images/divs etc */
+    user-drag: none;
+    pointer-events: none;
+    }
+    #stats{
+        display: block;
+        position: absolute;
+        z-index: 9999;
+
+    }
+    #logo{
+    margin:auto;
+    max-width: 90%;
+    position:absolute;
+    display:none;
+    text-align:center;
+    z-index: 9;
+    display: none;
+    }
+    #uiCanvas{
+        position: absolute;
+        top:0px;
+        z-index: 999;
+    }
+     @font-face {
+      font-family: 'airone';
+      src: url('fonts/aironeb.ttf') format('truetype');
+      font-weight: bold;
+      font-style: normal;
+  }
+    </style>
+    <script type="text/javascript" src="scripts/tweenMax/src/minified/TimelineLite.min.js"></script>
+    <script type="text/javascript" src="scripts/tweenMax/src/minified/easing/EasePack.min.js"></script>
+    <script type="text/javascript" src="scripts/tweenMax/src/minified/TimelineMax.min.js"></script>
+    <script type="text/javascript" src="scripts/tweenMax/src/minified/TweenMax.min.js"></script>
+    <script src="http://code.createjs.com/createjs-2013.12.12.min.js"></script>
+    
+</head>
+<body>
+    <div id="loader">
+        <div id="loadingFill"></div>
+    </div>
+    <canvas id="uiCanvas" style="float:left; width:100%; " ></canvas>
+    <div id="container" style="float:left; width:100%; display:none"></div>
+    
+    <script type="text/javascript">
+
+    var preload = new createjs.LoadQueue(false);
+    preload.addEventListener("fileload", handleFileComplete);
+    preload.addEventListener("complete", startFracVader);
+    preload.addEventListener("progress", handleOverallProgress);
+    preload.loadFile("http://code.jquery.com/jquery-1.9.1.min.js");
+    preload.loadFile("ui.js");
+    preload.loadFile('bundle.js');
+    // Overall progress handler
+    function startFracVader() {
+        window.onload = function() {
+            _width = window.innerWidth,
+            _height = window.innerHeight,
+            canvas = document.getElementById("uiCanvas");
+            canvas.style.height = _height + "px";
+            canvas.style.width = _width + "px";
+            stage = new createjs.Stage(canvas),
+            stage.width = stage.canvas.width = _width,
+            stage.height = stage.canvas.height = _height,
+            _stBounds = stage.getBounds();
+            var img = new Image();
+            img.src = "images/logoOmega.png";
+            img.onload = function(evt) {
+                logoBt = new createjs.Bitmap(evt.target);
+                stage.addChild(logoBt);
+                logoBt.scaleX = 0.8;
+                logoBt.scaleY = 0.8;
+                var lBounds = logoBt.getBounds();
+                logoBt.x = (stage.width - (lBounds.width * 0.8)) / 2;
+                logoBt.y = (stage.height - (lBounds.height * 0.8)) / 2;
+                logoBt.alpha = 0;
+                createjs.Tween.get(logoBt).to({
+                    alpha: 1
+                }, 400);
+                logoBt.on('click', function() {
+                    logoBt.alpha = 0;
+                    canvas.className = canvas.className + " unselectable";
+                    //sorry bro trixs are for kids...
+                    startFracVaders()
+                });
+            }
+            startFracIntro();
+            createjs.Ticker.addEventListener("tick", handleTick);
+            function handleTick(event) {
+                stage.update();
+            }
+        }
+    }
+    function handleOverallProgress(event) {
+        var perc = preload.progress*100;
+        var lf = document.getElementById("loadingFill");
+        TweenMax.to(lf,0.2,{width:perc+'%'});
+                
+    }
+    function handleFileComplete(event) {
+    document.body.appendChild(event.result);
+    }
+    </script>
+    <script id="vertexShader" type="x-shader/x-vertex">
+uniform vec3 viewVector;
+uniform float c;
+uniform float p;
+varying float intensity;
+void main() 
+{
+    vec3 vNormal = normalize( normalMatrix * normal );
+    vec3 vNormel = normalize( normalMatrix * viewVector );
+    intensity = pow( c - dot(vNormal, vNormel), p );
+    
+    gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+}
+</script>
+
+<!-- fragment shader a.k.a. pixel shader -->
+<script id="fragmentShader" type="x-shader/x-vertex"> 
+uniform vec3 glowColor;
+varying float intensity;
+void main() 
+{
+    vec3 glow = glowColor * intensity;
+    gl_FragColor = vec4( glow, 1.0 );
+}
+</script>
+</body>
+</html>

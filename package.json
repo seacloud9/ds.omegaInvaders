@@ -1,0 +1,39 @@
+{
+    "name": "fracVaders",
+    "private": false,
+    "description": "",
+    "version": "0.1.0",
+    "author": {
+        "name": "Brendon Smith",
+        "email": "brendonsmith@seacloud9.org",
+        "url": "http://seacloud9.org"
+    },
+    "licenses": [{
+        "type": "MIT",
+        "url": "https://github.com/seacloud9/ds.fracVader/blob/master/LICENSE-MIT"
+    }],
+    "engines": {
+        "node": ">= 0.8.0"
+    },
+    "scripts": {
+        "start": "node_modules/.bin/browservefy index.js 8080 -- -d"
+    },
+    "dependencies": {
+        "voxel-engine": "git://github.com/seacloud9/voxel-engine.git",
+        "voxel-player": "0.1.0",
+        "voxel-creature": "git://github.com/seacloud9/voxel-creature.git",
+        "voxel-critter": "git://github.com/seacloud9/voxel-critter.git",
+        "voxel-pp": "git://github.com/seacloud9/voxel-pp.git",
+        "voxel-bullet": "git://github.com/seacloud9/voxel-bullet.git",
+        "voxel-vader": "git://github.com/seacloud9/voxel-vader.git",
+        "voxel-spe": "git://github.com/seacloud9/voxel-spe.git",
+        "voxel-perlin-terrain": "1.0.0"
+    },
+    "devDependencies": {
+        "browservefy": "0.0.10"
+    },
+    "keywords": [
+        "voxel",
+        "space invader"
+    ]
+}

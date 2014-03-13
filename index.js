@@ -163,8 +163,10 @@ function initPostProcess() {
     postprocessor = voxelpp(game);
     bS = new postprocessor.EffectComposer.BloomPass(30.25, 10, 5, 1024);
     var fS = new postprocessor.EffectComposer.FilmPass(0.35, 0.95, 2048, false)
-    fS.renderToScreen = true
+    fS.renderToScreen = true;
     postprocessor.addPass(bS);
+    postprocessor.use(require('./scripts/badtv'));
+    postprocessor.use(require('./scripts/rgbshift'));
     postprocessor.addPass('ShaderPass', postprocessor.EffectComposer.ShaderExtras["screen"]);
 }
 
@@ -406,6 +408,10 @@ setUpTick = function() {
             var ray = new game.THREE.Ray(player.position, rP.sub(player.position).normalize());
             player.avatar.translateY(0.05 * ray.direction.y);
             player.avatar.translateZ(0.15 * ray.direction.z);
+            // fade effects
+            postprocessor.composer.passes[2].uniforms.distortion.value *= 0.99;
+            postprocessor.composer.passes[2].uniforms.distortion2.value *= 0.99;
+            postprocessor.composer.passes[3].uniforms.amount.value *= 0.5;
         }
 
         if (typeof _bullet != undefined) {
@@ -430,16 +436,20 @@ setUpTick = function() {
                 }
             }
         }
-
         if (player != undefined && _initGame == true && player.health <= 0) {
             _lives--;
+            postprocessor.composer.passes[2].uniforms.distortion.value = 3;
+            postprocessor.composer.passes[2].uniforms.distortion2.value = 5;
+            postprocessor.composer.passes[3].uniforms.amount.value = 0.5;
             _txtLives.text = "X " + _lives + ":";
             player.health = 100;
             healtHit(player.health / 100);
         } else if (player != undefined && _initGame == true && _lives < 1) {
+            postprocessor.composer.passes[2].uniforms.distortion.value *= 0.99;
+            postprocessor.composer.passes[2].uniforms.distortion2.value *= 0.99;
+            postprocessor.composer.passes[3].uniforms.amount.value *= 0.5;
             gameOver();
         }
-
     });
 }
 

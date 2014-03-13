@@ -164,8 +164,10 @@ function initPostProcess() {
     postprocessor = voxelpp(game);
     bS = new postprocessor.EffectComposer.BloomPass(30.25, 10, 5, 1024);
     var fS = new postprocessor.EffectComposer.FilmPass(0.35, 0.95, 2048, false)
-    fS.renderToScreen = true
+    fS.renderToScreen = true;
     postprocessor.addPass(bS);
+    postprocessor.use(require('./scripts/badtv'));
+    postprocessor.use(require('./scripts/rgbshift'));
     postprocessor.addPass('ShaderPass', postprocessor.EffectComposer.ShaderExtras["screen"]);
 }
 
@@ -407,6 +409,10 @@ setUpTick = function() {
             var ray = new game.THREE.Ray(player.position, rP.sub(player.position).normalize());
             player.avatar.translateY(0.05 * ray.direction.y);
             player.avatar.translateZ(0.15 * ray.direction.z);
+            // fade effects
+            postprocessor.composer.passes[2].uniforms.distortion.value *= 0.99;
+            postprocessor.composer.passes[2].uniforms.distortion2.value *= 0.99;
+            postprocessor.composer.passes[3].uniforms.amount.value *= 0.5;
         }
 
         if (typeof _bullet != undefined) {
@@ -434,12 +440,20 @@ setUpTick = function() {
 
         if (player != undefined && _initGame == true && player.health <= 0) {
             _lives--;
+            postprocessor.composer.passes[2].uniforms.distortion.value = 3;
+            postprocessor.composer.passes[2].uniforms.distortion2.value = 5;
+            postprocessor.composer.passes[3].uniforms.amount.value = 0.5;
             _txtLives.text = "X " + _lives + ":";
             player.health = 100;
             healtHit(player.health / 100);
         } else if (player != undefined && _initGame == true && _lives < 1) {
+            postprocessor.composer.passes[2].uniforms.distortion.value *= 0.99;
+            postprocessor.composer.passes[2].uniforms.distortion2.value *= 0.99;
+            postprocessor.composer.passes[3].uniforms.amount.value *= 0.5;
             gameOver();
         }
+
+
 
     });
 }
@@ -525,7 +539,7 @@ removeAllObjects = function() {
         removeAllObjects()
     }
 }
-},{"./scripts/shaders.js":70,"voxel-bullet":2,"voxel-critter":6,"voxel-engine":9,"voxel-perlin-terrain":50,"voxel-player":52,"voxel-pp":54,"voxel-spe":66,"voxel-vader":67}],2:[function(require,module,exports){
+},{"./scripts/badtv":70,"./scripts/rgbshift":71,"./scripts/shaders.js":72,"voxel-bullet":2,"voxel-critter":6,"voxel-engine":9,"voxel-perlin-terrain":50,"voxel-player":52,"voxel-pp":54,"voxel-spe":66,"voxel-vader":67}],2:[function(require,module,exports){
 var inherits = require('inherits');
 var EventEmitter = require('events').EventEmitter;
 
@@ -684,7 +698,7 @@ Bullet.prototype.BuildBullets = function(opts, camera) {
     return this.live;
 
 }
-},{"events":78,"inherits":3}],3:[function(require,module,exports){
+},{"events":80,"inherits":3}],3:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -802,7 +816,7 @@ Creature.prototype.notice = function(target, opts) {
         }
     }, opts.interval);
 };
-},{"events":78,"inherits":5}],5:[function(require,module,exports){
+},{"events":80,"inherits":5}],5:[function(require,module,exports){
 module.exports = inherits
 
 function inherits (c, p, proto) {
@@ -1865,7 +1879,7 @@ Game.prototype.handleChunkGeneration = function() {
 Game.prototype.destroy = function() {
     clearInterval(this.timer)
 }
-},{"./lib/detector":10,"./lib/stats":11,"__browserify_process":87,"aabb-3d":12,"collide-3d-tilemap":13,"events":78,"gl-matrix":14,"inherits":15,"interact":16,"kb-controls":25,"path":79,"pin-it":30,"raf":31,"spatial-events":32,"three":34,"tic":35,"voxel":45,"voxel-control":36,"voxel-mesh":37,"voxel-physical":38,"voxel-raycast":39,"voxel-region-change":40,"voxel-texture":41,"voxel-view":43}],10:[function(require,module,exports){
+},{"./lib/detector":10,"./lib/stats":11,"__browserify_process":89,"aabb-3d":12,"collide-3d-tilemap":13,"events":80,"gl-matrix":14,"inherits":15,"interact":16,"kb-controls":25,"path":81,"pin-it":30,"raf":31,"spatial-events":32,"three":34,"tic":35,"voxel":45,"voxel-control":36,"voxel-mesh":37,"voxel-physical":38,"voxel-raycast":39,"voxel-region-change":40,"voxel-texture":41,"voxel-view":43}],10:[function(require,module,exports){
 /**
  * @author alteredq / http://alteredqualia.com/
  * @author mr.doob / http://mrdoob.com/
@@ -5442,7 +5456,7 @@ function usedrag(el) {
   return ee
 }
 
-},{"drag-stream":17,"events":78,"fullscreen":23,"pointer-lock":24,"stream":80}],17:[function(require,module,exports){
+},{"drag-stream":17,"events":80,"fullscreen":23,"pointer-lock":24,"stream":82}],17:[function(require,module,exports){
 module.exports = dragstream
 
 var Stream = require('stream')
@@ -5510,7 +5524,7 @@ function dragstream(el) {
   }
 }
 
-},{"domnode-dom":18,"stream":80,"through":22}],18:[function(require,module,exports){
+},{"domnode-dom":18,"stream":82,"through":22}],18:[function(require,module,exports){
 module.exports = require('./lib/index')
 
 },{"./lib/index":19}],19:[function(require,module,exports){
@@ -5662,7 +5676,7 @@ function valueFromElement(el) {
   return el.value
 }
 
-},{"stream":80}],21:[function(require,module,exports){
+},{"stream":82}],21:[function(require,module,exports){
 module.exports = DOMStream
 
 var Stream = require('stream').Stream
@@ -5744,7 +5758,7 @@ proto.constructTextPlain = function(data) {
   return [textNode]
 }
 
-},{"stream":80}],22:[function(require,module,exports){
+},{"stream":82}],22:[function(require,module,exports){
 var process=require("__browserify_process");var Stream = require('stream')
 
 // through
@@ -5844,7 +5858,7 @@ function through (write, end) {
 }
 
 
-},{"__browserify_process":87,"stream":80}],23:[function(require,module,exports){
+},{"__browserify_process":89,"stream":82}],23:[function(require,module,exports){
 module.exports = fullscreen
 fullscreen.available = available
 
@@ -5935,7 +5949,7 @@ function shim(el) {
     el.oRequestFullScreen)
 }
 
-},{"events":78}],24:[function(require,module,exports){
+},{"events":80}],24:[function(require,module,exports){
 module.exports = pointer
 
 pointer.available = available
@@ -6099,7 +6113,7 @@ function shim(el) {
     null
 }
 
-},{"events":78,"stream":80}],25:[function(require,module,exports){
+},{"events":80,"stream":82}],25:[function(require,module,exports){
 var ever = require('ever')
   , vkey = require('vkey')
   , max = Math.max
@@ -6308,7 +6322,7 @@ Ever.typeOf = (function () {
     };
 })();;
 
-},{"./init.json":27,"./types.json":28,"events":78}],27:[function(require,module,exports){
+},{"./init.json":27,"./types.json":28,"events":80}],27:[function(require,module,exports){
 module.exports={
   "initEvent" : [
     "type",
@@ -6663,7 +6677,7 @@ function raf(el) {
 raf.polyfill = _raf
 raf.now = function() { return Date.now() }
 
-},{"events":78}],32:[function(require,module,exports){
+},{"events":80}],32:[function(require,module,exports){
 module.exports = SpatialEventEmitter
 
 var slice = [].slice
@@ -43879,7 +43893,7 @@ if (typeof exports !== 'undefined') {
   this['THREE'] = THREE;
 }
 
-},{"__browserify_process":87}],35:[function(require,module,exports){
+},{"__browserify_process":89}],35:[function(require,module,exports){
 /*
  * tic
  * https://github.com/shama/tic
@@ -44209,7 +44223,7 @@ function clamp(value, to) {
   return isFinite(to) ? max(min(value, to), -to) : value
 }
 
-},{"stream":80}],37:[function(require,module,exports){
+},{"stream":82}],37:[function(require,module,exports){
 var THREE = require('three')
 
 module.exports = function(data, mesher, scaleFactor, three) {
@@ -44848,7 +44862,7 @@ function coordinates(spatial, box, regionWidth) {
  
   return emitter
 }
-},{"aabb-3d":12,"events":78}],41:[function(require,module,exports){
+},{"aabb-3d":12,"events":80}],41:[function(require,module,exports){
 var tic = require('tic')();
 var createAtlas = require('atlaspack');
 
@@ -45581,7 +45595,7 @@ View.prototype.appendTo = function(element) {
 
   this.resizeWindow(this.width,this.height)
 }
-},{"__browserify_process":87}],44:[function(require,module,exports){
+},{"__browserify_process":89}],44:[function(require,module,exports){
 var events = require('events')
 var inherits = require('inherits')
 
@@ -45718,7 +45732,7 @@ Chunker.prototype.voxelVector = function(pos) {
   return [vx, vy, vz]
 };
 
-},{"events":78,"inherits":15}],45:[function(require,module,exports){
+},{"events":80,"inherits":15}],45:[function(require,module,exports){
 var chunker = require('./chunker')
 
 module.exports = function(opts) {
@@ -51238,11 +51252,183 @@ Vader.prototype.Explode = function() {
     }, 1000 / 60);
     return this.points;
 }
-},{"events":78,"inherits":68,"lsb":69,"voxel-bullet":2,"voxel-creature":4}],68:[function(require,module,exports){
+},{"events":80,"inherits":68,"lsb":69,"voxel-bullet":2,"voxel-creature":4}],68:[function(require,module,exports){
 module.exports=require(3)
 },{}],69:[function(require,module,exports){
 module.exports=require(8)
 },{}],70:[function(require,module,exports){
+/**
+ * @author felixturner / http://airtight.cc/
+ *
+ * Bad TV Shader
+ * Simulates a bad TV via horizontal distortion and vertical roll
+ * Uses Ashima WebGl Noise: https://github.com/ashima/webgl-noise
+ *
+ * time: steadily increasing float passed in
+ * distortion: amount of thick distortion
+ * distortion2: amount of fine grain distortion
+ * speed: distortion vertical travel speed
+ * rollSpeed: vertical roll speed
+ */
+
+module.exports = {
+  uniforms: {
+    "tDiffuse": { type: "t", value: null },
+    "time":     { type: "f", value: 0.0 },
+    "distortion":     { type: "f", value: 3.0 },
+    "distortion2":     { type: "f", value: 5.0 },
+    "speed":     { type: "f", value: 0.2 },
+    "rollSpeed":     { type: "f", value: 0.1 },
+  },
+
+  vertexShader: [
+    "varying vec2 vUv;",
+    "void main() {",
+    "vUv = uv;",
+    "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
+    "}"
+
+  ].join("\n"),
+
+  fragmentShader: [
+
+    "uniform sampler2D tDiffuse;",
+    "uniform float time;",
+    "uniform float distortion;",
+    "uniform float distortion2;",
+    "uniform float speed;",
+    "uniform float rollSpeed;",
+    "varying vec2 vUv;",
+    
+    // Start Ashima 2D Simplex Noise
+
+    "vec3 mod289(vec3 x) {",
+    "  return x - floor(x * (1.0 / 289.0)) * 289.0;",
+    "}",
+
+    "vec2 mod289(vec2 x) {",
+    "  return x - floor(x * (1.0 / 289.0)) * 289.0;",
+    "}",
+
+    "vec3 permute(vec3 x) {",
+    "  return mod289(((x*34.0)+1.0)*x);",
+    "}",
+
+    "float snoise(vec2 v)",
+    "  {",
+    "  const vec4 C = vec4(0.211324865405187,  // (3.0-sqrt(3.0))/6.0",
+    "                      0.366025403784439,  // 0.5*(sqrt(3.0)-1.0)",
+    "                     -0.577350269189626,  // -1.0 + 2.0 * C.x",
+    "                      0.024390243902439); // 1.0 / 41.0",
+    "  vec2 i  = floor(v + dot(v, C.yy) );",
+    "  vec2 x0 = v -   i + dot(i, C.xx);",
+
+    "  vec2 i1;",
+    "  i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);",
+    "  vec4 x12 = x0.xyxy + C.xxzz;",
+    " x12.xy -= i1;",
+
+    "  i = mod289(i); // Avoid truncation effects in permutation",
+    "  vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 ))",
+    "   + i.x + vec3(0.0, i1.x, 1.0 ));",
+
+    "  vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);",
+    "  m = m*m ;",
+    "  m = m*m ;",
+
+    "  vec3 x = 2.0 * fract(p * C.www) - 1.0;",
+    "  vec3 h = abs(x) - 0.5;",
+    "  vec3 ox = floor(x + 0.5);",
+    "  vec3 a0 = x - ox;",
+
+    "  m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );",
+
+    "  vec3 g;",
+    "  g.x  = a0.x  * x0.x  + h.x  * x0.y;",
+    "  g.yz = a0.yz * x12.xz + h.yz * x12.yw;",
+    "  return 130.0 * dot(m, g);",
+    "}",
+
+    // End Ashima 2D Simplex Noise
+
+    "void main() {",
+
+      "vec2 p = vUv;",
+      "float ty = time*speed;",
+      "float yt = p.y - ty;",
+
+      //smooth distortion
+      "float offset = snoise(vec2(yt*3.0,0.0))*0.2;",
+      // boost distortion
+      "offset = pow( offset*distortion,3.0)/distortion;",
+      //add fine grain distortion
+      "offset += snoise(vec2(yt*50.0,0.0))*distortion2*0.001;",
+      //combine distortion on X with roll on Y
+      "gl_FragColor = texture2D(tDiffuse,  vec2(fract(p.x + offset),fract(p.y-time*rollSpeed) ));",
+
+    "}"
+
+  ].join("\n")
+
+};
+},{}],71:[function(require,module,exports){
+/**
+ * @author felixturner / http://airtight.cc/
+ *
+ * RGB Shift Shader
+ * Shifts red and blue channels from center in opposite directions
+ * Ported from http://kriss.cx/tom/2009/05/rgb-shift/
+ * by Tom Butterworth / http://kriss.cx/tom/
+ *
+ * amount: shift distance (1 is width of input)
+ * angle: shift angle in radians
+ */
+
+module.exports = {
+
+  uniforms: {
+
+    "tDiffuse": { type: "t", value: null },
+    "amount":   { type: "f", value: 0.005 },
+    "angle":    { type: "f", value: 0.0 }
+
+  },
+
+  vertexShader: [
+
+    "varying vec2 vUv;",
+
+    "void main() {",
+
+      "vUv = uv;",
+      "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
+
+    "}"
+
+  ].join("\n"),
+
+  fragmentShader: [
+
+    "uniform sampler2D tDiffuse;",
+    "uniform float amount;",
+    "uniform float angle;",
+
+    "varying vec2 vUv;",
+
+    "void main() {",
+
+      "vec2 offset = amount * vec2( cos(angle), sin(angle));",
+      "vec4 cr = texture2D(tDiffuse, vUv + offset);",
+      "vec4 cga = texture2D(tDiffuse, vUv);",
+      "vec4 cb = texture2D(tDiffuse, vUv - offset);",
+      "gl_FragColor = vec4(cr.r, cga.g, cb.b, cga.a);",
+
+    "}"
+
+  ].join("\n")
+
+};
+},{}],72:[function(require,module,exports){
 vertexShader =
     ["uniform sampler2D noiseTexture;",
     "uniform float noiseScale;",
@@ -52551,7 +52737,7 @@ Effect.prototype.exportToJSON = function(shaderCode) {
 
     return result;
 }
-},{}],71:[function(require,module,exports){
+},{}],73:[function(require,module,exports){
 
 
 //
@@ -52769,7 +52955,7 @@ if (typeof Object.getOwnPropertyDescriptor === 'function') {
   exports.getOwnPropertyDescriptor = valueObject;
 }
 
-},{}],72:[function(require,module,exports){
+},{}],74:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -52842,7 +53028,7 @@ function onend() {
   timers.setImmediate(shims.bind(this.end, this));
 }
 
-},{"_shims":71,"_stream_readable":74,"_stream_writable":76,"timers":82,"util":83}],73:[function(require,module,exports){
+},{"_shims":73,"_stream_readable":76,"_stream_writable":78,"timers":84,"util":85}],75:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -52885,7 +53071,7 @@ PassThrough.prototype._transform = function(chunk, encoding, cb) {
   cb(null, chunk);
 };
 
-},{"_stream_transform":75,"util":83}],74:[function(require,module,exports){
+},{"_stream_transform":77,"util":85}],76:[function(require,module,exports){
 var process=require("__browserify_process");// Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -53806,7 +53992,7 @@ function endReadable(stream) {
   }
 }
 
-},{"__browserify_process":87,"_shims":71,"buffer":85,"events":78,"stream":80,"string_decoder":81,"timers":82,"util":83}],75:[function(require,module,exports){
+},{"__browserify_process":89,"_shims":73,"buffer":87,"events":80,"stream":82,"string_decoder":83,"timers":84,"util":85}],77:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -54012,7 +54198,7 @@ function done(stream, er) {
   return stream.push(null);
 }
 
-},{"_stream_duplex":72,"util":83}],76:[function(require,module,exports){
+},{"_stream_duplex":74,"util":85}],78:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -54382,7 +54568,7 @@ function endWritable(stream, state, cb) {
   state.ended = true;
 }
 
-},{"buffer":85,"stream":80,"timers":82,"util":83}],77:[function(require,module,exports){
+},{"buffer":87,"stream":82,"timers":84,"util":85}],79:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -54699,7 +54885,7 @@ assert.doesNotThrow = function(block, /*optional*/message) {
 };
 
 assert.ifError = function(err) { if (err) {throw err;}};
-},{"_shims":71,"util":83}],78:[function(require,module,exports){
+},{"_shims":73,"util":85}],80:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -54980,7 +55166,7 @@ EventEmitter.listenerCount = function(emitter, type) {
     ret = emitter._events[type].length;
   return ret;
 };
-},{"util":83}],79:[function(require,module,exports){
+},{"util":85}],81:[function(require,module,exports){
 var process=require("__browserify_process");// Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -55191,7 +55377,7 @@ exports.extname = function(path) {
   return splitPath(path)[3];
 };
 
-},{"__browserify_process":87,"_shims":71,"util":83}],80:[function(require,module,exports){
+},{"__browserify_process":89,"_shims":73,"util":85}],82:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -55320,7 +55506,7 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"_stream_duplex":72,"_stream_passthrough":73,"_stream_readable":74,"_stream_transform":75,"_stream_writable":76,"events":78,"util":83}],81:[function(require,module,exports){
+},{"_stream_duplex":74,"_stream_passthrough":75,"_stream_readable":76,"_stream_transform":77,"_stream_writable":78,"events":80,"util":85}],83:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -55513,7 +55699,7 @@ function base64DetectIncompleteChar(buffer) {
   return incomplete;
 }
 
-},{"buffer":85}],82:[function(require,module,exports){
+},{"buffer":87}],84:[function(require,module,exports){
 try {
     // Old IE browsers that do not curry arguments
     if (!setTimeout.call) {
@@ -55632,7 +55818,7 @@ if (!exports.setImmediate) {
   };
 }
 
-},{}],83:[function(require,module,exports){
+},{}],85:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -56177,7 +56363,7 @@ function hasOwnProperty(obj, prop) {
   return Object.prototype.hasOwnProperty.call(obj, prop);
 }
 
-},{"_shims":71}],84:[function(require,module,exports){
+},{"_shims":73}],86:[function(require,module,exports){
 exports.readIEEE754 = function(buffer, offset, isBE, mLen, nBytes) {
   var e, m,
       eLen = nBytes * 8 - mLen - 1,
@@ -56263,7 +56449,7 @@ exports.writeIEEE754 = function(buffer, value, offset, isBE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128;
 };
 
-},{}],85:[function(require,module,exports){
+},{}],87:[function(require,module,exports){
 var assert;
 exports.Buffer = Buffer;
 exports.SlowBuffer = Buffer;
@@ -57389,7 +57575,7 @@ Buffer.prototype.writeDoubleBE = function(value, offset, noAssert) {
   writeDouble(this, value, offset, true, noAssert);
 };
 
-},{"./buffer_ieee754":84,"assert":77,"base64-js":86}],86:[function(require,module,exports){
+},{"./buffer_ieee754":86,"assert":79,"base64-js":88}],88:[function(require,module,exports){
 (function (exports) {
 	'use strict';
 
@@ -57475,7 +57661,7 @@ Buffer.prototype.writeDoubleBE = function(value, offset, noAssert) {
 	module.exports.fromByteArray = uint8ToBase64;
 }());
 
-},{}],87:[function(require,module,exports){
+},{}],89:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};

@@ -1,5 +1,5 @@
-ds.fracVaders
-(DemoScene).fracVaders
+ds.omegaVaders
+(DemoScene).omegaVaders
 =============
 <pre>
    ___                             _____                     _               

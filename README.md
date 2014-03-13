@@ -13,7 +13,9 @@ ds.omegaVaders
 </div>
 
 <div style="float:left; width:700px; margin-top:20px;">
-	<p>Simple game that uses an algorithm to create random fractals in 3d space.  This game borrows jared tarbell http://levitated.net/daily/levInvaderFractal.html and renders the fractals as voxels.  This is a work in progress.
+	<p>Simple game that uses an algorithm to create random fractals in 3d space.  This game borrows jared tarbell http://levitated.net/daily/levInvaderFractal.html and renders the fractals as voxels.  This is a work in progress (WIP).
+	 </p>
+	 <p>Simple use download npm install and go!
 	 </p>
 </div>
 <div style="float:left; width:100%; margin-top:20px;">
@@ -21,4 +23,10 @@ ds.omegaVaders
 </div>
 <div style="float:left; width:100%; margin-top:20px;">
 <img src="fracVader.jpg" style="float:left; width:100%"/>
+</div>
+<div style="float:left; width:100%; margin-top:20px;">
+<img src="fracVader1.jpg" style="float:left; width:100%"/>
+</div>
+<div style="float:left; width:100%; margin-top:20px;">
+<img src="fracVader2.jpg" style="float:left; width:100%"/>
 </div>

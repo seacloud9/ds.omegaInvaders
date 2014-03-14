@@ -33,8 +33,9 @@ startGame = function() {
             jump_speed: 0.004
         },
         materials: [
-            ['glass2'], 'brick', 'dirt', 'obsidian'
+            ['glass2']
         ],
+        materialFlatColor: false,
         keybindings: {
             'W': 'forward',
             'A': null,
@@ -148,6 +149,7 @@ window.addEventListener('keydown', function(ev) {
             rootVector: new game.THREE.Vector3(mouse.x, mouse.y, 1),
             rootPosition: player.position,
             bulletPosition: bArr,
+            collisionRadius: 10,
             target: _liveBogeys,
         }, player.currentCamera);
     }
@@ -218,8 +220,6 @@ ppReset = function() {
 
 
 onWindowResize = function(event) {
-    //customUniforms.resolution.value.x = window.innerWidth;
-    //customUniforms.resolution.value.y = window.innerHeight;
     postprocessor.composer.setSize(window.innerWidth, window.innerHeight);
     window.game.camera.aspect = window.innerWidth / window.innerHeight;
     window.game.camera.updateProjectionMatrix();
@@ -307,25 +307,17 @@ startFracVaders = function() {
         player.avatar.head.children[4].visible = false;
         player.avatar.head.children[4].position.y = 0;
         player.avatar.head.children[4].position.z = 90
-
         player.subjectTo([0, 0, 0]);
         hellcatMod.item.subjectTo([0, 0, 0]);
         player.avatar.name = "omegavader";
         player.health = 100;
         //player.friction = new game.THREE.Vector3(1, 1, 10);
         //player.move([0,0,-0.000005]);
-
-
-        // physicalObject is most likely going to be your [voxel-player](https://github.com/substack/voxel-player)
-        // e.g.:
-
         player.possess();
-
         player.avatar.add(window.game.starTunnel.mesh);
         player.currentCamera = player.avatar.cameraInside.children[1];
         game.starTunnel.mesh.position.z = -90;
         game.starTunnel.mesh.position.y = 20;
-
         $('#loader').hide();
         $('#container').fadeIn("fast");
         /* $('#cockpit').css('bottom', '0px');

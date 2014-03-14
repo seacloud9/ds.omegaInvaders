@@ -34,8 +34,9 @@ startGame = function() {
             jump_speed: 0.004
         },
         materials: [
-            ['glass2'], 'brick', 'dirt', 'obsidian'
+            ['glass2']
         ],
+        materialFlatColor: false,
         keybindings: {
             'W': 'forward',
             'A': null,
@@ -149,6 +150,7 @@ window.addEventListener('keydown', function(ev) {
             rootVector: new game.THREE.Vector3(mouse.x, mouse.y, 1),
             rootPosition: player.position,
             bulletPosition: bArr,
+            collisionRadius: 10,
             target: _liveBogeys,
         }, player.currentCamera);
     }
@@ -219,8 +221,6 @@ ppReset = function() {
 
 
 onWindowResize = function(event) {
-    //customUniforms.resolution.value.x = window.innerWidth;
-    //customUniforms.resolution.value.y = window.innerHeight;
     postprocessor.composer.setSize(window.innerWidth, window.innerHeight);
     window.game.camera.aspect = window.innerWidth / window.innerHeight;
     window.game.camera.updateProjectionMatrix();
@@ -308,25 +308,17 @@ startFracVaders = function() {
         player.avatar.head.children[4].visible = false;
         player.avatar.head.children[4].position.y = 0;
         player.avatar.head.children[4].position.z = 90
-
         player.subjectTo([0, 0, 0]);
         hellcatMod.item.subjectTo([0, 0, 0]);
         player.avatar.name = "omegavader";
         player.health = 100;
         //player.friction = new game.THREE.Vector3(1, 1, 10);
         //player.move([0,0,-0.000005]);
-
-
-        // physicalObject is most likely going to be your [voxel-player](https://github.com/substack/voxel-player)
-        // e.g.:
-
         player.possess();
-
         player.avatar.add(window.game.starTunnel.mesh);
         player.currentCamera = player.avatar.cameraInside.children[1];
         game.starTunnel.mesh.position.z = -90;
         game.starTunnel.mesh.position.y = 20;
-
         $('#loader').hide();
         $('#container').fadeIn("fast");
         /* $('#cockpit').css('bottom', '0px');
@@ -437,7 +429,6 @@ setUpTick = function() {
                 }
             }
         }
-
         if (player != undefined && _initGame == true && player.health <= 0) {
             _lives--;
             postprocessor.composer.passes[2].uniforms.distortion.value = 3;
@@ -452,9 +443,6 @@ setUpTick = function() {
             postprocessor.composer.passes[3].uniforms.amount.value *= 0.5;
             gameOver();
         }
-
-
-
     });
 }
 
@@ -590,7 +578,7 @@ Bullet.prototype.BuildBullets = function(opts, camera) {
     if (opts.rootPosition == undefined) opts.rootPosition = new game.THREE.Vector3(1, 1, 1);
     if (opts.bulletPosition == undefined) opts.bulletPosition = [new game.THREE.Vector3(1, 1, 1)];
     if (opts.radius === undefined) opts.radius = 50;
-    if (opts.collisionRadius === undefined) opts.collisionRadius = 10;
+    if (opts.collisionRadius === undefined) opts.collisionRadius = 30;
     if (opts.interval === undefined) opts.interval = 1000;
     if (opts.damage == undefined) this.damage = 5;
     if (opts.owner == undefined) this.owner = this.type[1];
@@ -598,7 +586,7 @@ Bullet.prototype.BuildBullets = function(opts, camera) {
         this.local[i] = new game.THREE.Mesh(this.mesh, this.material);
         this.local[i].position.set(opts.bulletPosition[i].x, opts.bulletPosition[i].y, opts.bulletPosition[i].z);
         this.local[i].useQuaternion = true;
-        //this.local[i].add(this.sprite);
+        this.local[i].add(this.sprite);
     }
     if (this.owner) {
         if (camera == undefined) return console.log('player requires a camera. ');
@@ -608,7 +596,6 @@ Bullet.prototype.BuildBullets = function(opts, camera) {
             this.local[i].ray = ray;
         }
     } else {
-        //this.pro.unprojectVector(opts.rootVector, camera);
         var ray = new game.THREE.Ray(opts.rootPosition, opts.rootVector.sub(opts.rootPosition).normalize());
         for (var i = 0; i < opts.count; i++) {
             this.local[i].ray = ray;
@@ -657,8 +644,10 @@ Bullet.prototype.BuildBullets = function(opts, camera) {
         }
 
         _bT.Destory = function() {
+            _bT._event.removeAllListeners();
             _bT._events = null;
             _bT._event = null;
+            game.scene.remove(_bT.mesh);
             delete _bT;
         }
 
@@ -671,9 +660,7 @@ Bullet.prototype.BuildBullets = function(opts, camera) {
                 });
                 _bT._event.on('collide', function(cTarget) {
                     try {
-                        //console.log('collideX');
                         if (!_bT.owner && _initGame) {
-                            //console.log(_bT.owner)
                             player.health -= _bT.damage;
                             healtHit(1.0 - (player.health / 100));
                             _bT.mesh.visible = false;
@@ -50927,7 +50914,7 @@ module.exports.Vader = Vader;
 
 function Vader(game, opts) {
     if (!opts) opts = {};
-    if (opts.cPool == undefined) opts.cPool = [0x800830, 0x7F0863, 660000, 0x5B001A, 0x65087F];
+    if (opts.cPool == undefined) opts.cPool = [0x800830, 0x7F0863, 660000, 0x5B001A, 0x65087F, 0xff0084, 0x00F1F9];
     if (opts.clr == undefined) opts.clr = [new game.THREE.Color(opts.cPool[Math.floor(Math.random() * opts.cPool.length)]), new game.THREE.Color(opts.cPool[Math.floor(Math.random() * opts.cPool.length)])];
     if (opts.amb == undefined) opts.amb = [0x800830, 0x800830];
     if (opts.size == undefined) opts.size = 5;
@@ -51144,7 +51131,7 @@ function Vader(game, opts) {
                     var gcDist = b.position.distanceTo(game.camera.position);
                     if (game.camera.far < gcDist) {
                         _VD._vaderBullet.live.splice(b.id, 1);
-                        b.Destroy();
+                        b.Destory();
                         game.scene.remove(b);
                     }
                     var p = b.position,
@@ -51179,6 +51166,10 @@ Vader.prototype.Destroy = function() {
         game.scene.remove(this.vaderObj);
         this.removeAllListeners();
         this.vaderObj.visible = false;
+        for (var i = this._vaderBullet.live.length - 1; i >= 0; i--) {
+            var b = this._vaderBullet.live[i];
+            b.Destory();
+        }
         this._events.notice = null;
         this._events.collide = null;
 
